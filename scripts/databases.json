@@ -1,0 +1,24 @@
+{
+    "Databases": [
+        {
+            "Name": "BankCustomerDB",
+            "Tables": [
+                "role",
+                "user",
+                "user_role",
+                "account",
+                "account_transaction",
+                "loan_application",
+                "loan_repayment",
+                "data_import",
+                "audit_log",
+                "import_record"
+            ],
+            "Connection": {
+                "Server": "localhost",
+                "User": "sa",
+                "Password": "Zh@ng810975!@#"
+            }
+        }
+    ]
+}
