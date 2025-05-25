@@ -1,0 +1,14 @@
+### 用户注册
+POST http://localhost:8080/api/users/register
+Content-Type: application/json
+
+{
+  "username": "alice",
+  "passwordHash": "hashed_password",
+  "fullName": "Alice Smith",
+  "email": "alice@example.com",
+  "phone": "13800138000"
+}
+
+### 获取用户列表
+GET http://localhost:8080/api/users

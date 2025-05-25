@@ -1,0 +1,14 @@
+# 前端通用排除项
+client/node_modules/
+client/dist/
+client/.env
+
+# 后端通用排除项
+server/target/
+server/.gradle/
+server/.idea/
+
+# 全局排除项
+*.log
+*.iml
+.DS_Store
