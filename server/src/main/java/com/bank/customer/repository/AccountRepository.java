@@ -3,6 +3,8 @@ package com.bank.customer.repository;
 import com.bank.customer.entity.Account;
 import com.bank.customer.entity.AccountStatus;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
@@ -20,11 +22,11 @@ public interface AccountRepository extends JpaRepository<Account, String> {
     // 调用存储过程（按名称绑定参数）
     @Procedure(procedureName = "sp_create_account")
     String createAccount(
-        @Param("p_user_id") Integer userId,
-        @Param("p_account_type") String accountType
-    );
+            @Param("p_user_id") Integer userId,
+            @Param("p_account_type") String accountType);
+
     // 根据状态查询账户
-    List<Account> findByStatus(AccountStatus status);
+    Page<Account> findByStatus(AccountStatus status, Pageable pageable);
 
     // 添加余额查询方法
     @Query("SELECT a.balance FROM Account a WHERE a.accountId = :accountId")

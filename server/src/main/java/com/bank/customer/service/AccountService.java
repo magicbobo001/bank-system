@@ -16,6 +16,8 @@ import org.hibernate.Session;
 import lombok.RequiredArgsConstructor;
 
 import org.hibernate.Filter;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -28,17 +30,26 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final AuditLogRepository auditLogRepository;
-    
+
     @PersistenceContext
     private EntityManager entityManager;
-     // ==== 开户（管理员权限） ====
+
+    // ==== 开户（管理员权限） ====
     public Account createAccount(Integer userId, String accountType) {
         @SuppressWarnings("unused")
         User user = userRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("用户不存在"));
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
         String accountId = accountRepository.createAccount(userId, accountType);
         return accountRepository.findById(accountId)
-            .orElseThrow(() -> new RuntimeException("开户失败"));
+                .orElseThrow(() -> new RuntimeException("开户失败"));
+    }
+
+    public Page<Account> getAllAccounts(AccountStatus status, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        if (status != null) {
+            return accountRepository.findByStatus(status, pageable);
+        }
+        return accountRepository.findAll(pageable);
     }
 
     // ==== 查看用户所有账户（普通用户） ====
@@ -52,56 +63,55 @@ public class AccountService {
     // ==== 注销或删除账户（设为 CLOSED） ====
     public void closeAccount(String accountId, Integer operatorId) {
         Account account = accountRepository.findById(accountId)
-            .orElseThrow(AccountNotFoundException::new);
+                .orElseThrow(AccountNotFoundException::new);
         account.setStatus(AccountStatus.CLOSED);
         account.setBalance(BigDecimal.ZERO);
         account.setClosedAt(LocalDateTime.now());
         accountRepository.save(account);
         auditLogRepository.save(
-            new AuditLog(null, "CLOSE", accountId, operatorId, LocalDateTime.now())
-        );
+                new AuditLog(null, "CLOSE", accountId, operatorId, LocalDateTime.now()));
     }
 
     // ==== 管理员冻结账户 ====
     public void freezeAccount(String accountId, Integer operatorId) {
         Account account = accountRepository.findById(accountId)
-            .orElseThrow(AccountNotFoundException::new);
-        
+                .orElseThrow(AccountNotFoundException::new);
+
         account.setStatus(AccountStatus.FROZEN);
         accountRepository.save(account);
-        
+
         auditLogRepository.save(
-            new AuditLog(null, "FREEZE", accountId, operatorId, LocalDateTime.now())
-        );
+                new AuditLog(null, "FREEZE", accountId, operatorId, LocalDateTime.now()));
     }
 
     // ==== 管理员解冻账户 ====
     public void unfreezeAccount(String accountId, Integer operatorId) {
         Account account = accountRepository.findById(accountId)
-            .orElseThrow(AccountNotFoundException::new);
-        
+                .orElseThrow(AccountNotFoundException::new);
+
         account.setStatus(AccountStatus.ACTIVE);
         accountRepository.save(account);
-        
+
         auditLogRepository.save(
-            new AuditLog(null, "UNFREEZE", accountId, operatorId, LocalDateTime.now())
-        );
+                new AuditLog(null, "UNFREEZE", accountId, operatorId, LocalDateTime.now()));
     }
+
     // ==== 恢复账户（设为 ACTIVE） ====
     public Account restoreAccount(String accountId, Integer operatorId) {
         Account account = accountRepository.findById(accountId)
-            .orElseThrow(AccountNotFoundException::new);
+                .orElseThrow(AccountNotFoundException::new);
         account.setStatus(AccountStatus.ACTIVE);
         account.setClosedAt(null);
         accountRepository.save(account);
         auditLogRepository.save(
-            new AuditLog(null, "RESTORE", accountId, operatorId, LocalDateTime.now())
-        );
+                new AuditLog(null, "RESTORE", accountId, operatorId, LocalDateTime.now()));
         return account;
     }
 
-    // ==== 查看已删除账户 ====
-    public List<Account> getDeletedAccounts() {
-        return accountRepository.findByStatus(AccountStatus.CLOSED);
-    }    
+    /*
+     * // ==== 查看已删除账户 ====
+     * public List<Account> getDeletedAccounts() {
+     * return accountRepository.findByStatus(AccountStatus.CLOSED);
+     * }
+     */
 }
