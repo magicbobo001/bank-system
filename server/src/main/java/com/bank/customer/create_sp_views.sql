@@ -35,3 +35,10 @@ SELECT
 FROM [user] u
 JOIN account a ON u.user_id = a.user_id;
 GO
+
+-- 添加交易视图
+CREATE VIEW v_account_transaction_history AS
+SELECT t.*, a1.user_id as from_user, a2.user_id as to_user
+FROM account_transaction t
+LEFT JOIN account a1 ON t.from_account_id = a1.account_id
+LEFT JOIN account a2 ON t.to_account_id = a2.account_id;

@@ -5,6 +5,10 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Collection;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Entity
 @Table(name = "[user]")
@@ -40,6 +44,13 @@ public class User {
     private String status = "ACTIVE";
 
     @OneToMany(mappedBy = "userId")
-    // 原代码中使用的 org.hibernate.mapping.List 不是泛型类型，这里替换为 java.util.List
     private List<UserRole> roles;
+
+    // 导入 Collection 类
+    // 导入 GrantedAuthority 类
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return this.roles.stream()
+                .map(userRole -> new SimpleGrantedAuthority("ROLE_" + userRole.getRole().getRoleName().toUpperCase()))
+                .collect(Collectors.toList());
+    }
 }
