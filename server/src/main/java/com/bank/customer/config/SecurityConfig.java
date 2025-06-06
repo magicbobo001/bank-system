@@ -52,7 +52,7 @@ public class SecurityConfig {
         public CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
                 // 允许的源（增加OPTIONS方法支持）
-                config.setAllowedOrigins(List.of("http://localhost:3000"));
+                config.setAllowedOrigins(List.of("http://localhost:5173"));
                 // 允许的HTTP方法（添加OPTIONS）
                 config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
                 // 允许的请求头（保持与前端一致）
@@ -72,6 +72,8 @@ public class SecurityConfig {
         @Bean
         public SecurityFilterChain securityFilterChain(
                         HttpSecurity http) throws Exception { // 添加过滤器参数
+                http
+                                .cors(Customizer.withDefaults());
                 http
                                 .exceptionHandling(handling -> handling
                                                 .authenticationEntryPoint(new AuthenticationEntryPoint() {
