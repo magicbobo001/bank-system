@@ -5,9 +5,14 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 
 @Entity
 @Table(name = "account")
+@FilterDef(name = "activeAccountFilter", parameters = @ParamDef(name = "status", type = String.class))
+@Filter(name = "activeAccountFilter", condition = "status = :status")
 @Data
 public class Account {
     @Id
@@ -33,4 +38,7 @@ public class Account {
 
     @Column(name = "closed_at")
     private LocalDateTime closedAt; // 确保字段存在
+
+    @Column(nullable = false)
+    private boolean hasOverdue;
 }

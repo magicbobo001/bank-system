@@ -32,11 +32,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import com.bank.customer.security.JwtTokenProvider;
+import com.bank.customer.security.JwtAuthenticationFilter;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+        private final JwtTokenProvider jwtTokenProvider;
+
         @Bean
         public PasswordEncoder passwordEncoder() {
                 return new BCryptPasswordEncoder();
@@ -85,8 +90,13 @@ public class SecurityConfig {
                                                                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                                                                 response.setContentType(MediaType.APPLICATION_JSON_VALUE
                                                                                 + ";charset=UTF-8");
+                                                                String message = authException.getMessage()
+                                                                                .contains("Bad credentials")
+                                                                                                ? "用户名或密码错误"
+                                                                                                : "无效的认证令牌或未提供认证信息";
                                                                 response.getWriter().write(
-                                                                                "{\"error\":\"认证失败\",\"message\":\"用户名或密码错误\"}");
+                                                                                "{\"error\":\"认证失败\",\"message\":\""
+                                                                                                + message + "\"}");
                                                         }
                                                 })
                                                 .accessDeniedHandler((request, response, accessDeniedException) -> {
@@ -107,7 +117,8 @@ public class SecurityConfig {
                                 .csrf(csrf -> csrf.disable()) // 添加CSRF禁用配置
                                 .sessionManagement(session -> session
                                                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-
+                // 新增：添加 JWT 认证过滤器
+                http.addFilterBefore(jwtAuthenticationFilter(null), UsernamePasswordAuthenticationFilter.class);
                 http
                                 .authorizeHttpRequests(auth -> auth
 
@@ -121,23 +132,29 @@ public class SecurityConfig {
 
                                                 // 账户相关接口
                                                 .requestMatchers(HttpMethod.GET, "/api/accounts/my-accounts")
-                                                .hasRole("USER")
+                                                .hasAnyRole("USER", "ADMIN")
                                                 .requestMatchers("/api/accounts/admin/**").hasRole("ADMIN")
 
                                                 // 贷款接口
                                                 .requestMatchers(HttpMethod.POST, "/api/loans/apply").hasRole("USER")
                                                 .requestMatchers(HttpMethod.POST, "/api/loans/*/repay").hasRole("ADMIN")
-
+                                                .requestMatchers(HttpMethod.POST, "/api/loans/*/reject")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.POST, "/api/loans/*/schedule")
+                                                .hasRole("ADMIN")
                                                 // 交易记录
                                                 .requestMatchers(HttpMethod.GET,
                                                                 "/api/transactions/{accountId}/history")
-                                                .hasRole("USER")
+                                                .hasAnyRole("USER", "ADMIN")
                                                 .requestMatchers("/api/transactions/**").hasRole("ADMIN")
 
                                                 // 管理员专属接口
                                                 .requestMatchers("/api/users").hasRole("ADMIN")
-                                                .requestMatchers("/api/loans/approve/**").hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/api/loans/*/approve/")
+                                                .hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.PUT, "/api/users/change-password")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/api/users/register")
                                                 .hasRole("ADMIN")
 
                                                 .requestMatchers("/error").permitAll()
@@ -167,4 +184,9 @@ public class SecurityConfig {
                                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
         }
 
+        // 新增：JWT 认证过滤器方法
+        @Bean
+        public JwtAuthenticationFilter jwtAuthenticationFilter(UserDetailsService userDetailsService) {
+                return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
+        }
 }

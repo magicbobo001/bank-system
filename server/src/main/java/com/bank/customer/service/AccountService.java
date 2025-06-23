@@ -27,91 +27,105 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AccountService {
-    private final AccountRepository accountRepository;
-    private final UserRepository userRepository;
-    private final AuditLogRepository auditLogRepository;
+        private final AccountRepository accountRepository;
+        private final UserRepository userRepository;
+        private final AuditLogRepository auditLogRepository;
 
-    @PersistenceContext
-    private EntityManager entityManager;
+        @PersistenceContext
+        private EntityManager entityManager;
 
-    // ==== 开户（管理员权限） ====
-    public Account createAccount(Integer userId, String accountType) {
-        @SuppressWarnings("unused")
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("用户不存在"));
-        String accountId = accountRepository.createAccount(userId, accountType);
-        return accountRepository.findById(accountId)
-                .orElseThrow(() -> new RuntimeException("开户失败"));
-    }
-
-    public Page<Account> getAllAccounts(AccountStatus status, int page, int size) {
-        PageRequest pageable = PageRequest.of(page, size);
-        if (status != null) {
-            return accountRepository.findByStatus(status, pageable);
+        // ==== 开户（管理员权限） ====
+        public Account createAccount(Integer userId, String accountType) {
+                @SuppressWarnings("unused")
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new RuntimeException("用户不存在"));
+                String accountId = accountRepository.createAccount(userId, accountType);
+                return accountRepository.findById(accountId)
+                                .orElseThrow(() -> new RuntimeException("开户失败"));
         }
-        return accountRepository.findAll(pageable);
-    }
 
-    // ==== 查看用户所有账户（普通用户） ====
-    public List<Account> getUserAccounts(Integer userId) {
-        Session session = entityManager.unwrap(Session.class);
-        Filter filter = session.enableFilter("activeAccountFilter");
-        filter.setParameter("isDeleted", false);
-        return accountRepository.findByUserUserId(userId);
-    }
+        public Page<Account> getAllAccounts(AccountStatus status, int page, int size) {
+                PageRequest pageable = PageRequest.of(page, size);
+                if (status != null) {
+                        return accountRepository.findByStatus(status, pageable);
+                }
+                return accountRepository.findAll(pageable);
+        }
 
-    // ==== 注销或删除账户（设为 CLOSED） ====
-    public void closeAccount(String accountId, Integer operatorId) {
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(AccountNotFoundException::new);
-        account.setStatus(AccountStatus.CLOSED);
-        account.setBalance(BigDecimal.ZERO);
-        account.setClosedAt(LocalDateTime.now());
-        accountRepository.save(account);
-        auditLogRepository.save(
-                new AuditLog(null, "CLOSE", accountId, operatorId, LocalDateTime.now()));
-    }
+        // ==== 查看用户所有账户（普通用户） ====
+        public List<Account> getUserAccounts(Integer userId) {
+                Session session = entityManager.unwrap(Session.class);
+                Filter filter = session.enableFilter("activeAccountFilter");
+                filter.setParameter("status", "ACTIVE");
+                return accountRepository.findByUserUserId(userId);
+        }
 
-    // ==== 管理员冻结账户 ====
-    public void freezeAccount(String accountId, Integer operatorId) {
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(AccountNotFoundException::new);
+        // ==== 注销或删除账户（设为 CLOSED） ====
+        public void closeAccount(String accountId, Integer operatorId) {
+                Account account = accountRepository.findById(accountId)
+                                .orElseThrow(AccountNotFoundException::new);
+                account.setStatus(AccountStatus.CLOSED);
+                account.setBalance(BigDecimal.ZERO);
+                account.setClosedAt(LocalDateTime.now());
+                accountRepository.save(account);
+                auditLogRepository.save(
+                                new AuditLog(null, "CLOSE", accountId, operatorId, LocalDateTime.now()));
+        }
 
-        account.setStatus(AccountStatus.FROZEN);
-        accountRepository.save(account);
+        // ==== 管理员冻结账户 ====
+        public void freezeAccount(String accountId, Integer operatorId) {
+                Account account = accountRepository.findById(accountId)
+                                .orElseThrow(AccountNotFoundException::new);
 
-        auditLogRepository.save(
-                new AuditLog(null, "FREEZE", accountId, operatorId, LocalDateTime.now()));
-    }
+                account.setStatus(AccountStatus.FROZEN);
+                accountRepository.save(account);
 
-    // ==== 管理员解冻账户 ====
-    public void unfreezeAccount(String accountId, Integer operatorId) {
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(AccountNotFoundException::new);
+                auditLogRepository.save(
+                                new AuditLog(null, "FREEZE", accountId, operatorId, LocalDateTime.now()));
+        }
 
-        account.setStatus(AccountStatus.ACTIVE);
-        accountRepository.save(account);
+        // ==== 管理员解冻账户 ====
+        public void unfreezeAccount(String accountId, Integer operatorId) {
+                Account account = accountRepository.findById(accountId)
+                                .orElseThrow(AccountNotFoundException::new);
 
-        auditLogRepository.save(
-                new AuditLog(null, "UNFREEZE", accountId, operatorId, LocalDateTime.now()));
-    }
+                account.setStatus(AccountStatus.ACTIVE);
+                accountRepository.save(account);
 
-    // ==== 恢复账户（设为 ACTIVE） ====
-    public Account restoreAccount(String accountId, Integer operatorId) {
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(AccountNotFoundException::new);
-        account.setStatus(AccountStatus.ACTIVE);
-        account.setClosedAt(null);
-        accountRepository.save(account);
-        auditLogRepository.save(
-                new AuditLog(null, "RESTORE", accountId, operatorId, LocalDateTime.now()));
-        return account;
-    }
+                auditLogRepository.save(
+                                new AuditLog(null, "UNFREEZE", accountId, operatorId, LocalDateTime.now()));
+        }
 
-    /*
-     * // ==== 查看已删除账户 ====
-     * public List<Account> getDeletedAccounts() {
-     * return accountRepository.findByStatus(AccountStatus.CLOSED);
-     * }
-     */
+        // ==== 恢复账户（设为 ACTIVE） ====
+        public Account restoreAccount(String accountId, Integer operatorId) {
+                Account account = accountRepository.findById(accountId)
+                                .orElseThrow(AccountNotFoundException::new);
+                account.setStatus(AccountStatus.ACTIVE);
+                account.setClosedAt(null);
+                accountRepository.save(account);
+                auditLogRepository.save(
+                                new AuditLog(null, "RESTORE", accountId, operatorId, LocalDateTime.now()));
+                return account;
+        }
+
+        // 标记账户和用户有逾期记录
+        public void markAccountWithOverdue(String accountId) {
+                Account account = accountRepository.findById(accountId)
+                                .orElseThrow(() -> new RuntimeException("账户不存在"));
+
+                // 更新账户逾期标记
+                account.setHasOverdue(true);
+                accountRepository.save(account);
+
+                // 更新用户逾期标记
+                User user = account.getUser();
+                user.setHasOverdue(true);
+                userRepository.save(user);
+        }
+        /*
+         * // ==== 查看已删除账户 ====
+         * public List<Account> getDeletedAccounts() {
+         * return accountRepository.findByStatus(AccountStatus.CLOSED);
+         * }
+         */
 }

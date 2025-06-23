@@ -45,6 +45,8 @@ public class User {
 
     @OneToMany(mappedBy = "userId")
     private List<UserRole> roles;
+    @Column(nullable = false)
+    private boolean hasOverdue;
 
     // 导入 Collection 类
     // 导入 GrantedAuthority 类

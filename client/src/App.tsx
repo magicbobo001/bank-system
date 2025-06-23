@@ -1,7 +1,8 @@
 import { useEffect } from "react";
 import { Provider } from "react-redux";
 import { RouterProvider } from "react-router-dom";
-import { store } from "./app/store";
+import { store, persistor } from "./app/store";
+import { PersistGate } from "redux-persist/integration/react";
 import { router } from "./routes/Router";
 import { setCredentials } from "./features/auth/authSlice";
 import api from "./api/api";
@@ -14,7 +15,7 @@ function App() {
     if (token) {
       console.log("开始调用 /api/auth/me 接口..."); // 添加日志
       api
-        .get("/api/auth/login")
+        .get("/auth/me")
         .then((res) => {
           console.log("接口返回数据:", res.data); // 添加日志
           store.dispatch(
@@ -27,8 +28,12 @@ function App() {
           );
         })
         .catch((err) => {
-          console.log("接口调用失败:", err); // 添加日志
+          console.error(
+            "恢复登录状态失败:",
+            err.response?.data?.message || "token无效或已过期"
+          );
           localStorage.removeItem("token");
+          alert("登录状态已过期，请重新登录"); // 添加明确提示
         });
     } else {
       console.log("localStorage 中无 token"); // 添加日志
@@ -37,7 +42,10 @@ function App() {
 
   return (
     <Provider store={store}>
-      <RouterProvider router={router} />
+      {/* 新增：使用 PersistGate 等待持久化数据加载 */}
+      <PersistGate loading={null} persistor={persistor}>
+        <RouterProvider router={router} />
+      </PersistGate>
     </Provider>
   );
 }

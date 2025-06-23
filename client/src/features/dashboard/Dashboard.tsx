@@ -1,9 +1,25 @@
+import { Box } from "@mui/material";
+import Navbar from "../../components/Navbar";
 
 export default function Dashboard() {
   return (
-    <div>
-      <h2>用户仪表盘</h2>
-      {/* 后续添加账户管理功能 */}
-    </div>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        minHeight: "100vh",
+        maxWidth: "80%",
+        margin: "0 auto",
+        padding: "20px",
+        backgroundImage: "url(/images/dashboard-bg.jpeg)",
+        backgroundSize: "70%", // 覆盖整个容器
+        backgroundPosition: "50% 28%", // 居中显示
+        backgroundRepeat: "no-repeat", // 不重复
+      }}
+    >
+      <Navbar /> {/* 保留导航条 */}
+      {/* 移除所有按钮渲染逻辑 */}
+    </Box>
   );
 }

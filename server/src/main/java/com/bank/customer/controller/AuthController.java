@@ -62,15 +62,14 @@ public class AuthController {
                 String username = authentication.getName();
                 User user = userRepository.findByUsername(username)
                                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
-                String token = jwtTokenProvider.generateToken(user); // 生成Token
+
                 return ResponseEntity.ok()
                                 .body(Map.of(
                                                 "userId", user.getUserId(),
                                                 "username", user.getUsername(),
                                                 "roles", user.getRoles().stream()
                                                                 .map(role -> role.getRole().getRoleName())
-                                                                .collect(Collectors.toList()),
-                                                "token", token));
+                                                                .collect(Collectors.toList())));
         }
 
         record LoginRequest(String username, String password) {

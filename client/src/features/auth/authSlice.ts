@@ -1,13 +1,17 @@
-import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import {
+  createAction,
+  createSlice,
+  type PayloadAction,
+} from "@reduxjs/toolkit";
 import api from "../../api/api";
 import type { AppDispatch } from "../../app/store";
 
 interface AuthState {
-  user: null | {
+  user: {
     userId: number;
     username: string;
     roles: string[];
-  };
+  } | null;
   token: string | null;
 }
 
@@ -44,8 +48,15 @@ const authSlice = createSlice({
     },
   },
 });
-
-export const { setCredentials, logout } = authSlice.actions;
+type UserCredentials = {
+  token: string;
+  userId: number;
+  username: string;
+  roles: string[];
+} | null;
+export const setCredentials = createAction<UserCredentials>(
+  "auth/setCredentials"
+);
 
 export const login =
   (username: string, password: string) => async (dispatch: AppDispatch) => {
@@ -68,3 +79,4 @@ export const login =
   };
 
 export default authSlice.reducer;
+export const { logout } = authSlice.actions;

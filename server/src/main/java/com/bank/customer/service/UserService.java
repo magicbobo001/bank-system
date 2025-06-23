@@ -41,6 +41,9 @@ public class UserService {
     }
 
     public User updateUser(User updatedUser) {
+        if (userRepository.existsByUsername(updatedUser.getUsername())) {
+            throw new RuntimeException("用户名已存在");
+        }
         User existing = getUserById(updatedUser.getUserId());
         existing.setFullName(updatedUser.getFullName());
         existing.setEmail(updatedUser.getEmail());
