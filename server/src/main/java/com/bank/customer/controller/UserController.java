@@ -26,8 +26,12 @@ public class UserController {
     private final UserRepository userRepository;
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
-        return userService.registerUser(user);
+    public ResponseEntity<?> register(@RequestBody User user) {
+        try {
+            return ResponseEntity.ok(userService.registerUser(user));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body("{\"message\": \"" + e.getMessage() + "\"}");
+        }
     }
 
     @GetMapping

@@ -43,18 +43,18 @@ public class SecurityConfig {
         private final JwtTokenProvider jwtTokenProvider;
 
         @Bean
-        public PasswordEncoder passwordEncoder() {
+        PasswordEncoder passwordEncoder() {
                 return new BCryptPasswordEncoder();
         }
 
         @Bean
-        public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
                 return config.getAuthenticationManager();
         }
 
         // 添加CORS配置Bean
         @Bean
-        public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfigurationSource corsConfigurationSource() {
                 CorsConfiguration config = new CorsConfiguration();
                 // 允许的源（增加OPTIONS方法支持）
                 config.setAllowedOrigins(List.of("http://localhost:5173"));
@@ -75,7 +75,7 @@ public class SecurityConfig {
         }
 
         @Bean
-        public SecurityFilterChain securityFilterChain(
+        SecurityFilterChain securityFilterChain(
                         HttpSecurity http) throws Exception { // 添加过滤器参数
                 http
                                 .cors(Customizer.withDefaults());
@@ -133,12 +133,22 @@ public class SecurityConfig {
                                                 // 账户相关接口
                                                 .requestMatchers(HttpMethod.GET, "/api/accounts/my-accounts")
                                                 .hasAnyRole("USER", "ADMIN")
+                                                .requestMatchers(HttpMethod.POST, "/api/accounts/create")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.DELETE, "/api/accounts/{accountId}")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/api/accounts/{accountId}/freeze")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/api/accounts/{accountId}/unfreeze")
+                                                .hasRole("ADMIN")
+                                                .requestMatchers(HttpMethod.PUT, "/api/accounts/{accountId}/restore")
+                                                .hasRole("ADMIN")
                                                 .requestMatchers("/api/accounts/admin/**").hasRole("ADMIN")
 
                                                 // 贷款接口
                                                 .requestMatchers(HttpMethod.POST, "/api/loans/apply").hasRole("USER")
                                                 .requestMatchers(HttpMethod.POST, "/api/loans/*/repay").hasRole("ADMIN")
-                                                .requestMatchers(HttpMethod.POST, "/api/loans/*/reject")
+                                                .requestMatchers(HttpMethod.PUT, "/api/loans/*/reject")
                                                 .hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.POST, "/api/loans/*/schedule")
                                                 .hasRole("ADMIN")
@@ -150,13 +160,13 @@ public class SecurityConfig {
 
                                                 // 管理员专属接口
                                                 .requestMatchers("/api/users").hasRole("ADMIN")
-                                                .requestMatchers(HttpMethod.PUT, "/api/loans/*/approve/")
+                                                .requestMatchers(HttpMethod.PUT, "/api/loans/*/approve")
                                                 .hasRole("ADMIN")
                                                 .requestMatchers(HttpMethod.PUT, "/api/users/change-password")
                                                 .hasRole("ADMIN")
-                                                .requestMatchers(HttpMethod.PUT, "/api/users/register")
+                                                .requestMatchers(HttpMethod.POST, "/api/users/register")
                                                 .hasRole("ADMIN")
-
+                                                .requestMatchers(HttpMethod.GET, "/api/loans/pending").hasRole("ADMIN")
                                                 .requestMatchers("/error").permitAll()
                                                 .anyRequest().authenticated())
                                 .httpBasic(Customizer.withDefaults());
@@ -164,7 +174,7 @@ public class SecurityConfig {
         }
 
         @Bean
-        public UserDetailsService userDetailsService(UserRepository userRepository,
+        UserDetailsService userDetailsService(UserRepository userRepository,
                         UserRoleRepository userRoleRepository) {
                 return username -> userRepository.findByUsername(username)
                                 .map(user -> {
@@ -186,7 +196,7 @@ public class SecurityConfig {
 
         // 新增：JWT 认证过滤器方法
         @Bean
-        public JwtAuthenticationFilter jwtAuthenticationFilter(UserDetailsService userDetailsService) {
+        JwtAuthenticationFilter jwtAuthenticationFilter(UserDetailsService userDetailsService) {
                 return new JwtAuthenticationFilter(jwtTokenProvider, userDetailsService);
         }
 }

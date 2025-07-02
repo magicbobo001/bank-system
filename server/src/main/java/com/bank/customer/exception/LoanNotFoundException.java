@@ -4,4 +4,8 @@ public class LoanNotFoundException extends RuntimeException {
     public LoanNotFoundException() {
         super("贷款不存在");
     }
+
+    public LoanNotFoundException(String message) {
+        super(message);
+    }
 }

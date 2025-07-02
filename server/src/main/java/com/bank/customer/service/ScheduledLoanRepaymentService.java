@@ -38,7 +38,7 @@ public class ScheduledLoanRepaymentService {
     }
 
     // 处理当天应还款项
-    private void processDueRepayments(LocalDate today) {
+    void processDueRepayments(LocalDate today) {
         List<LoanRepayment> dueRepayments = repaymentRepo.findByStatusAndRepaymentDate(
                 RepaymentStatus.PENDING, today);
 
@@ -55,7 +55,7 @@ public class ScheduledLoanRepaymentService {
     }
 
     // 处理逾期项目
-    private void processOverdueRepayments(LocalDate today) {
+    void processOverdueRepayments(LocalDate today) {
         List<LoanRepayment> overdueRepayments = repaymentRepo.findByStatus(
                 RepaymentStatus.OVERDUE);
 
@@ -85,7 +85,7 @@ public class ScheduledLoanRepaymentService {
     }
 
     // 执行自动还款
-    private void autoRepay(LoanRepayment repayment) {
+    void autoRepay(LoanRepayment repayment) {
         LoanApplication loan = repayment.getLoan();
         String fromAccountId = loan.getAccount().getAccountId();
         String toAccountId = "LOAN_BANK_ACCOUNT"; // 银行贷款账户

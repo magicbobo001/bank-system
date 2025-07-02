@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 import java.util.Collection;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -44,7 +45,7 @@ public class User {
     private String status = "ACTIVE";
 
     @OneToMany(mappedBy = "userId")
-    private List<UserRole> roles;
+    private List<UserRole> roles = new ArrayList<>(); // 初始化空列表避免null
     @Column(nullable = false)
     private boolean hasOverdue;
 

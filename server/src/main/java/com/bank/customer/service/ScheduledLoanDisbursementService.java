@@ -9,14 +9,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import com.bank.customer.entity.LoanApplication;
 import com.bank.customer.repository.LoanApplicationRepository;
-import lombok.RequiredArgsConstructor;
 
 @Service
-@RequiredArgsConstructor
 public class ScheduledLoanDisbursementService {
-    private static final Logger log = LoggerFactory.getLogger(ScheduledLoanDisbursementService.class);
+    private Logger log;
     private final LoanApplicationRepository loanAppRepo;
     private final TransactionService transactionService;
+
+    public ScheduledLoanDisbursementService(LoanApplicationRepository loanAppRepo,
+            TransactionService transactionService) {
+        this.loanAppRepo = loanAppRepo;
+        this.transactionService = transactionService;
+        this.log = LoggerFactory.getLogger(ScheduledLoanDisbursementService.class);
+    }
 
     // 每天凌晨1点执行放款检查
     @Scheduled(cron = "0 0 1 * * ?")
@@ -34,7 +39,7 @@ public class ScheduledLoanDisbursementService {
     }
 
     // 执行放款操作
-    private void disburseLoan(LoanApplication loan) {
+    void disburseLoan(LoanApplication loan) {
         try {
             // 银行专用贷款账户ID
             String bankLoanAccountId = "LOAN_BANK_ACCOUNT";
@@ -53,5 +58,10 @@ public class ScheduledLoanDisbursementService {
             // 记录放款失败日志，可考虑添加重试机制
             log.error("Loan disbursement failed for loan ID: {}", loan.getLoanId(), e);
         }
+    }
+
+    // 添加日志设置方法，供测试注入mock
+    public void setLog(Logger log) {
+        this.log = log;
     }
 }

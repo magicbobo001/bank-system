@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bank.customer.entity.User;
+import com.bank.customer.exception.InvalidUsernameOrPasswordException;
 import com.bank.customer.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -34,7 +35,7 @@ public class AuthController {
         public ResponseEntity<?> login(@RequestBody LoginRequest request) {
                 User user = userRepository.findByUsername(request.username())
                                 .filter(u -> passwordEncoder.matches(request.password(), u.getPasswordHash()))
-                                .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
+                                .orElseThrow(() -> new InvalidUsernameOrPasswordException("用户名或密码错误"));
                 // 防御性检查：确保角色数据非空
                 if (user.getRoles() == null || user.getRoles().isEmpty()) {
                         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户未分配角色");

@@ -24,6 +24,10 @@ public class LoanCalculator {
             BigDecimal principal,
             BigDecimal annualRate,
             int term) {
+        // 零利率处理
+        if (annualRate.compareTo(BigDecimal.ZERO) == 0) {
+            return principal.divide(BigDecimal.valueOf(term), 4, RoundingMode.HALF_UP);
+        }
         BigDecimal monthlyRate = annualRate.divide(BigDecimal.valueOf(100), 10, RoundingMode.HALF_UP)
                 .divide(BigDecimal.valueOf(12), 10, RoundingMode.HALF_UP);
         BigDecimal factor = monthlyRate.add(BigDecimal.ONE).pow(term);
@@ -51,6 +55,8 @@ public class LoanCalculator {
         for (int i = 1; i <= loan.getTerm(); i++) {
             BigDecimal interest = remainingPrincipal.multiply(monthlyRate)
                     .setScale(2, RoundingMode.HALF_UP);
+            // System.out.printf("计算第%d期利息: 剩余本金=%.4f, 月利率=%.6f, 利息=%.4f%n",
+            // i, remainingPrincipal, monthlyRate, interest);
             BigDecimal principal = monthlyPayment.subtract(interest);
 
             LoanRepayment repayment = new LoanRepayment();
@@ -63,6 +69,7 @@ public class LoanCalculator {
                 principal = remainingPrincipal;
                 // 最后一期还款额 = 本金 + 利息（动态调整，不再固定为月供）
                 monthlyPayment = principal.add(interest);
+                // System.out.println("最后一期还款额: " + monthlyPayment);
             }
 
             // 同步更新还款记录的金额字段

@@ -1,7 +1,6 @@
 package com.bank.customer.exception;
 
-import javax.security.auth.login.AccountNotFoundException;
-
+import com.bank.customer.dto.ApiError;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -13,15 +12,32 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
     @ExceptionHandler(AccountNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public String handleAccountNotFound(AccountNotFoundException e) {
-        return "账户不存在";
+    public ApiError handleAccountNotFound(AccountNotFoundException e) {
+        return ApiError.of(HttpStatus.NOT_FOUND, "账户不存在");
     }
 
-    // 新增对UsernameNotFoundException的处理
     @ExceptionHandler(UsernameNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleUsernameNotFound(UsernameNotFoundException e) {
+        return ApiError.of(HttpStatus.NOT_FOUND, "用户不存在");
+    }
+
+    @ExceptionHandler(InvalidUsernameOrPasswordException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public String handleUsernameNotFound(UsernameNotFoundException e) {
-        return "用户名或密码错误";
+    public ApiError handleInvalidUsernameOrPassword(InvalidUsernameOrPasswordException e) {
+        return ApiError.of(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    @ExceptionHandler(InvalidDateException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleInvalidDate(InvalidDateException e) {
+        return ApiError.of(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
+    @ExceptionHandler(LoanNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleLoanNotFound(LoanNotFoundException e) {
+        return ApiError.of(HttpStatus.NOT_FOUND, "贷款不存在");
     }
 
     @ExceptionHandler(RuntimeException.class)
@@ -40,5 +56,11 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public String handleValidationException(ConstraintViolationException e) {
         return "请求参数不合法: " + e.getMessage();
+    }
+
+    @ExceptionHandler(RepaymentNotFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    public ApiError handleRepaymentNotFound(RepaymentNotFoundException e) {
+        return ApiError.of(HttpStatus.NOT_FOUND, "还款记录不存在");
     }
 }
