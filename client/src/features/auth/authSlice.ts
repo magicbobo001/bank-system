@@ -4,6 +4,7 @@ import {
   type PayloadAction,
 } from "@reduxjs/toolkit";
 import api from "../../api/api";
+import { userApi } from "../../api/api";
 import type { AppDispatch } from "../../app/store";
 
 interface AuthState {
@@ -71,6 +72,8 @@ export const login =
           roles: response.data.roles,
         })
       );
+      // 更新最后登录时间
+      await userApi.updateLastLogin(response.data.userId);
     } catch (err: unknown) {
       if (err instanceof Error) {
         alert(err.message);

@@ -19,7 +19,7 @@ import Navbar from "../../components/Navbar";
 
 interface UserFormData {
   username: string;
-  password: string;
+  passwordHash: string;
   fullName: string;
   email: string;
   phone: string;
@@ -50,7 +50,7 @@ export default function UserManagement() {
   const [openRegisterModal, setOpenRegisterModal] = useState(false);
   const [registerForm, setRegisterForm] = useState<UserFormData>({
     username: "",
-    password: "",
+    passwordHash: "",
     fullName: "",
     email: "",
     phone: "",
@@ -61,7 +61,7 @@ export default function UserManagement() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editForm, setEditForm] = useState<UserFormData>({
     username: "",
-    password: "",
+    passwordHash: "",
     fullName: "",
     email: "",
     phone: "",
@@ -154,7 +154,7 @@ export default function UserManagement() {
         flexDirection: "column",
         alignItems: "center",
         minHeight: "100vh",
-        maxWidth: "80%",
+        maxWidth: "100%",
         margin: "0 auto",
         padding: "20px",
       }}
@@ -223,11 +223,12 @@ export default function UserManagement() {
                             fullName: user.fullName,
                             email: user.email,
                             phone: user.phone,
-                            password: "",
+                            passwordHash: "",
                           });
                           setOpenEditModal(true);
                         }}
                         sx={{ mr: 1 }}
+                        disabled={user.username === "loan"}
                       >
                         编辑
                       </Button>
@@ -239,6 +240,7 @@ export default function UserManagement() {
                           setChangingPasswordUser(user.userId);
                           setOpenPasswordModal(true);
                         }}
+                        disabled={user.username === "loan"}
                       >
                         修改密码
                       </Button>
@@ -284,11 +286,11 @@ export default function UserManagement() {
             <TextField
               label="密码"
               type="password"
-              value={registerForm.password}
+              value={registerForm.passwordHash}
               onChange={(e) =>
                 setRegisterForm((prev) => ({
                   ...prev,
-                  password: e.target.value,
+                  passwordHash: e.target.value,
                 }))
               }
               required

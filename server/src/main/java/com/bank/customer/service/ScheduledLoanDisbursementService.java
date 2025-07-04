@@ -24,7 +24,7 @@ public class ScheduledLoanDisbursementService {
     }
 
     // 每天凌晨1点执行放款检查
-    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 * * * * ?")
     @Transactional
     public void processScheduledDisbursements() {
         LocalDate today = LocalDate.now();

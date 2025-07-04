@@ -2,46 +2,110 @@ import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { login } from "./authSlice";
 import type { AppDispatch } from "../../app/store";
-import { Box, Button, TextField, Typography, Container } from "@mui/material";
+import {
+  Box,
+  Button,
+  TextField,
+  Typography,
+  Container,
+  Paper,
+  Alert,
+} from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { styled } from "@mui/material/styles";
+
+// 自定义渐变背景容器
+const StyledContainer = styled(Container)(({ theme }) => ({
+  minHeight: "100vh",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  background: "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+  padding: theme.spacing(4),
+}));
+
+// 自定义登录卡片
+const LoginPaper = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(6),
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  boxShadow: theme.shadows[10],
+  borderRadius: Number(theme.shape.borderRadius) * 2,
+  transition: "transform 0.3s ease, box-shadow 0.3s ease",
+  "&:hover": {
+    transform: "translateY(-5px)",
+    boxShadow: theme.shadows[15],
+  },
+}));
+
+// 自定义提交按钮
+const StyledButton = styled(Button)(({ theme }) => ({
+  mt: 4,
+  mb: 2,
+  padding: theme.spacing(1.5),
+  fontSize: "1rem",
+  background: "linear-gradient(45deg, #1976d2 0%, #42a5f5 100%)",
+  "&:hover": {
+    background: "linear-gradient(45deg, #1565c0 0%, #1e88e5 100%)",
+  },
+}));
+
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(""); // 重置错误信息
+
+    if (!username || !password) {
+      setError("请输入用户名和密码");
+      return;
+    }
+
     try {
       await dispatch(login(username, password));
-      navigate("/dashboard"); // 登录成功后跳转
+      navigate("/dashboard");
     } catch {
-      alert("登录失败：用户名或密码错误");
+      setError("登录失败：用户名或密码错误");
     }
   };
 
   return (
-    <Container component="main" maxWidth="xs" sx={{ mt: 8 }}>
-      <Box
-        sx={{
-          marginTop: 8,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          p: 4,
-          border: "1px solid #e0e0e0",
-          borderRadius: 2,
-        }}
-      >
-        <Typography component="h1" variant="h5">
-          银行系统登录
-        </Typography>
+    <StyledContainer as="main" maxWidth="xs">
+      <LoginPaper elevation={6}>
+        {/* 银行Logo和标题 */}
         <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ mt: 1, width: "100%" }}
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            mb: 4,
+          }}
         >
+          <Typography
+            component="h1"
+            variant="h4"
+            sx={{ fontWeight: 700, color: "#1976d2", mb: 1 }}
+          >
+            银行客户信息管理系统
+          </Typography>
+        </Box>
+
+        {/* 错误提示 */}
+        {error && (
+          <Alert severity="error" sx={{ width: "100%", mb: 3 }}>
+            {error}
+          </Alert>
+        )}
+
+        <Box component="form" onSubmit={handleSubmit} sx={{ width: "100%" }}>
+          {/* 用户名输入框 */}
           <TextField
-            margin="normal"
             required
             fullWidth
             id="username"
@@ -51,9 +115,31 @@ export default function Login() {
             autoFocus
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            sx={(theme) => ({
+              mb: 2,
+              "& .MuiInputLabel-root": {
+                zIndex: 2,
+                backgroundColor: theme.palette.background.paper,
+                px: 1,
+                mx: 0.5,
+                transition: "all 0.2s ease-out",
+              },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: theme.shape.borderRadius,
+                "&.Mui-focused fieldset": {
+                  borderColor: "#1976d2",
+                  boxShadow: "0 0 0 1px rgba(25, 118, 210, 0.2)",
+                  borderWidth: 1.5,
+                },
+                "&:hover fieldset": {
+                  borderColor: "#90caf9",
+                },
+              },
+            })}
           />
+
+          {/* 密码输入框 */}
           <TextField
-            margin="normal"
             required
             fullWidth
             name="password"
@@ -63,17 +149,40 @@ export default function Login() {
             autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            sx={(theme) => ({
+              mb: 3,
+              "& .MuiInputLabel-root": {
+                zIndex: 2,
+                backgroundColor: theme.palette.background.paper,
+                px: 1,
+                mx: 0.5,
+                transition: "all 0.2s ease-out",
+              },
+              "& .MuiOutlinedInput-root": {
+                borderRadius: theme.shape.borderRadius,
+                "&.Mui-focused fieldset": {
+                  borderColor: "#1976d2",
+                  boxShadow: "0 0 0 1px rgba(25, 118, 210, 0.2)",
+                  borderWidth: 1.5,
+                },
+                "&:hover fieldset": {
+                  borderColor: "#90caf9",
+                },
+              },
+            })}
           />
-          <Button
+
+          {/* 登录按钮 */}
+          <StyledButton
             type="submit"
             fullWidth
             variant="contained"
-            sx={{ mt: 3, mb: 2 }}
+            size="large"
           >
-            登录
-          </Button>
+            安全登录
+          </StyledButton>
         </Box>
-      </Box>
-    </Container>
+      </LoginPaper>
+    </StyledContainer>
   );
 }

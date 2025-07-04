@@ -76,13 +76,20 @@ public class LoanController {
 
     // 获取所有贷款状态
     @GetMapping("/status")
-    public List<LoanStatusDTO> getAllLoanStatus() {
-        List<LoanApplication> loans = loanService.getAllLoans();
+    public List<LoanStatusDTO> getAllLoanStatus(@RequestParam(required = false) Integer userId) {
+
+        List<LoanApplication> loans = userId != null ? loanService.getLoansByUserId(userId) : loanService.getAllLoans();
         return loans.stream()
                 .map(loan -> new LoanStatusDTO(
                         loan.getLoanId(),
                         loan.getUser().getUserId(),
-                        loan.getStatus().name()))
+                        loan.getStatus().name(),
+                        loan.getAccount().getAccountId(),
+                        loan.getAmount(),
+                        loan.getTerm(),
+                        loan.getInterestRate(),
+                        loan.getStartDate(),
+                        loan.getEndDate()))
                 .toList();
     }
 }

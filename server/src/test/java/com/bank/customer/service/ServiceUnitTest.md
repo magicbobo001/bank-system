@@ -33,6 +33,7 @@
 | approveLoan_Success | 审批贷款成功 | loanId=1 | 贷款状态改为APPROVED，生成还款计划 |
 | repay_Success | 偿还贷款成功 | loanId=1, repaymentDate=当前日期 | 还款状态改为PAID，更新剩余本金 |
 | repay_WithLoanCompleted | 当期贷款已还清 | loanId=1(所有还款已完成) | 抛出BusinessException |
+| getLoansByUserId_Success | 获取当前用户贷款列表 | userId=1 | 返回当前用户的贷款列表 |
 
 ### 3. ScheduledLoanDisbursementServiceTest
 **测试目标**：验证定时贷款发放服务的功能正确性
@@ -77,12 +78,13 @@
 | changePassword_Success | 修改密码成功 | userId=1, oldPassword=oldpass, newPassword=newpass | 密码更新为新密码 |
 | changePassword_OldPasswordIncorrect | 旧密码不正确 | userId=1, oldPassword=wrongpass, newPassword=newpass | 抛出"旧密码不正确"异常 |
 | updateUser_Success | 更新用户信息 | userId=1, username=updateduser | 返回更新后的用户信息 |
+| updateLastLogin_Success | 更新用户登录时间 | userId=1 | 最后登录时间更新为最新登录时间 |
 
 ## 测试覆盖率
 - 服务类覆盖率：100% (6个服务类)
-- 方法覆盖率：100% (包含所有业务方法)
+- 分支覆盖率：≥95% (包含所有业务方法)
 - 业务场景覆盖率：100% (包含成功/失败/边界/异常场景)
-- 分支覆盖率：≥90% (包含条件分支、循环分支)
+- 业务场景覆盖率：100% (包含条件分支、循环分支)
 
 ## 结论
 现有测试用例覆盖了各服务类的主要业务逻辑、异常场景和边界条件，能够有效验证服务层功能的正确性和可靠性。建议在添加新业务功能时同步更新测试用例，保持测试覆盖率，并定期执行测试以防止回归问题。

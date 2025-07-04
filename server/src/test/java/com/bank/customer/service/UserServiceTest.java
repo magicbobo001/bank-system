@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -240,5 +241,18 @@ public class UserServiceTest {
         assertNotNull(result);
         assertEquals(2, result.size());
         verify(userRepository).findAll();
+    }
+
+    // 测试更新用户最后登录时间成功
+    @Test
+    void updateLastLogin_Success() {
+        // Arrange
+        Integer userId = 1;
+
+        // Act
+        userService.updateLastLogin(userId);
+
+        // Assert
+        verify(userRepository).updateLastLogin(eq(userId), any(LocalDateTime.class));
     }
 }

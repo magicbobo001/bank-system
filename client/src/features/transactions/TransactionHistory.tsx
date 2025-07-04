@@ -91,7 +91,13 @@ export default function TransactionHistory() {
                       {new Date(t.transactionTime).toLocaleString()}
                     </TableCell>
                     <TableCell>{t.transactionType}</TableCell>
-                    <TableCell>{t.amount.toFixed(2)}</TableCell>
+                    <TableCell>
+                      {(t.transactionType === "TRANSFER" &&
+                        t.fromAccountId === accountId) ||
+                      t.transactionType === "WITHDRAW"
+                        ? `-${t.amount.toFixed(2)}`
+                        : t.amount.toFixed(2)}
+                    </TableCell>
                     <TableCell>
                       {t.transactionType === "TRANSFER"
                         ? t.fromAccountId === accountId

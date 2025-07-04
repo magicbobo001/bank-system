@@ -83,7 +83,7 @@ export default function LoanApplication() {
         alignItems: "center", // 水平居中
         justifyContent: "flex-start",
         minHeight: "100vh",
-        maxWidth: "80%",
+        maxWidth: "100%",
         margin: "0 auto",
         padding: "20px",
       }}

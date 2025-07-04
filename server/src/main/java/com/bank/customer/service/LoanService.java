@@ -176,4 +176,8 @@ public class LoanService {
     public List<LoanApplication> getAllLoans() {
         return loanAppRepo.findAll();
     }
+
+    public List<LoanApplication> getLoansByUserId(Integer userId) {
+        return loanAppRepo.findByUserUserId(userId);
+    }
 }

@@ -51,6 +51,12 @@ export default function Navbar() {
         <Button component={Link} to="/loans/apply" color="inherit">
           申请贷款
         </Button>
+        {/* 普通用户显示贷款详情链接 */}
+        {!user?.roles.includes("ADMIN") && (
+          <Button component={Link} to="/loans/details" color="inherit">
+            贷款详情
+          </Button>
+        )}
         <Button onClick={handleLogout} color="inherit">
           注销登录
         </Button>

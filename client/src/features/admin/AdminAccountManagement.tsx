@@ -74,7 +74,7 @@ export default function AdminAccountManagement() {
       setIsLoading(true);
       api
         .get("/accounts/admin", {
-          params: { status: "ACTIVE", page: 0, size: 20 },
+          params: { page: 0, size: 20 },
         })
         .then((res) => setAccounts(res.data.content))
         .catch((err) => alert("加载账户失败：" + err.message))
@@ -238,7 +238,7 @@ export default function AdminAccountManagement() {
           params: { operatorId: user?.userId },
         });
         alert("销户成功");
-        setAccounts(accounts.filter((acc) => acc.accountId !== accountId));
+        api.get("/accounts/admin").then((res) => setAccounts(res.data.content));
       } catch (err) {
         alert("销户失败：" + (err as Error).message);
       }
@@ -262,7 +262,7 @@ export default function AdminAccountManagement() {
         flexDirection: "column",
         alignItems: "center",
         minHeight: "100vh",
-        maxWidth: "80%",
+        maxWidth: "100%",
         margin: "0 auto",
         padding: "20px",
       }}
@@ -324,7 +324,10 @@ export default function AdminAccountManagement() {
                             setTargetAccountId("");
                             setOpenTransactionModal(true);
                           }}
-                          disabled={acc.status !== "ACTIVE"}
+                          disabled={
+                            acc.status !== "ACTIVE" ||
+                            acc.accountId === "LOAN_BANK_ACCOUNT"
+                          }
                         >
                           存款
                         </Button>
@@ -339,7 +342,10 @@ export default function AdminAccountManagement() {
                             setTargetAccountId("");
                             setOpenTransactionModal(true);
                           }}
-                          disabled={acc.status !== "ACTIVE"}
+                          disabled={
+                            acc.status !== "ACTIVE" ||
+                            acc.accountId === "LOAN_BANK_ACCOUNT"
+                          }
                         >
                           取款
                         </Button>
@@ -354,50 +360,61 @@ export default function AdminAccountManagement() {
                             setTargetAccountId("");
                             setOpenTransactionModal(true);
                           }}
-                          disabled={acc.status !== "ACTIVE"}
+                          disabled={
+                            acc.status !== "ACTIVE" ||
+                            acc.accountId === "LOAN_BANK_ACCOUNT"
+                          }
                         >
                           转账
                         </Button>
-                        {acc.status === "ACTIVE" && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            onClick={() => handleFreezeAccount(acc.accountId)}
-                          >
-                            冻结
-                          </Button>
-                        )}
-                        {acc.status === "FROZEN" && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="success"
-                            onClick={() => handleUnfreezeAccount(acc.accountId)}
-                          >
-                            解冻
-                          </Button>
-                        )}
-                        {acc.status !== "CLOSED" && (
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            color="error"
-                            onClick={() => handleCloseAccount(acc.accountId)}
-                          >
-                            销户
-                          </Button>
-                        )}
-                        {acc.status === "CLOSED" && (
-                          <Button
-                            size="small"
-                            variant="text"
-                            color="success"
-                            onClick={() => handleRestoreAccount(acc.accountId)}
-                          >
-                            恢复
-                          </Button>
-                        )}
+                        {acc.status === "ACTIVE" &&
+                          acc.accountId !== "LOAN_BANK_ACCOUNT" && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              onClick={() => handleFreezeAccount(acc.accountId)}
+                            >
+                              冻结
+                            </Button>
+                          )}
+                        {acc.status === "FROZEN" &&
+                          acc.accountId !== "LOAN_BANK_ACCOUNT" && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="success"
+                              onClick={() =>
+                                handleUnfreezeAccount(acc.accountId)
+                              }
+                            >
+                              解冻
+                            </Button>
+                          )}
+                        {acc.status !== "CLOSED" &&
+                          acc.accountId !== "LOAN_BANK_ACCOUNT" && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="error"
+                              onClick={() => handleCloseAccount(acc.accountId)}
+                            >
+                              销户
+                            </Button>
+                          )}
+                        {acc.status === "CLOSED" &&
+                          acc.accountId !== "LOAN_BANK_ACCOUNT" && (
+                            <Button
+                              size="small"
+                              variant="outlined"
+                              color="success"
+                              onClick={() =>
+                                handleRestoreAccount(acc.accountId)
+                              }
+                            >
+                              恢复
+                            </Button>
+                          )}
                       </Box>
                     </TableCell>
                   </TableRow>
@@ -542,7 +559,13 @@ export default function AdminAccountManagement() {
                     {new Date(t.transactionTime).toLocaleString()}
                   </TableCell>
                   <TableCell>{t.transactionType}</TableCell>
-                  <TableCell>{t.amount.toFixed(2)}</TableCell>
+                  <TableCell>
+                    {(t.transactionType === "TRANSFER" &&
+                      t.fromAccountId === selectedAccount?.accountId) ||
+                    t.transactionType === "WITHDRAW"
+                      ? `-${t.amount.toFixed(2)}`
+                      : t.amount.toFixed(2)}
+                  </TableCell>
                   <TableCell>
                     {t.transactionType === "TRANSFER"
                       ? t.fromAccountId === selectedAccount?.accountId

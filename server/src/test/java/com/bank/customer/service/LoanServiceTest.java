@@ -5,6 +5,7 @@ import com.bank.customer.entity.Account;
 import com.bank.customer.entity.AccountStatus;
 import com.bank.customer.entity.LoanApplication;
 import com.bank.customer.entity.LoanRepayment;
+import com.bank.customer.entity.User;
 import com.bank.customer.exception.AccountStatusException;
 import com.bank.customer.exception.BusinessException;
 import com.bank.customer.exception.InvalidDateException;
@@ -30,6 +31,8 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class LoanServiceTest {
+    @Mock
+    private UserService userService;
 
     @Mock
     private LoanApplicationRepository loanAppRepo;
@@ -340,5 +343,37 @@ public class LoanServiceTest {
         assertNotNull(result);
         assertEquals(2, result.size());
         verify(loanAppRepo).findAll();
+    }
+
+    @Test
+    void getLoansByUserId_Success() {
+        // Arrange
+        Integer userId = 1;
+        User user = new User();
+        user.setUserId(userId);
+        LoanApplication loan1 = new LoanApplication();
+        loan1.setLoanId(1L);
+        loan1.setUser(user);
+        loan1.setStatus(LoanApplication.LoanStatus.APPROVED);
+
+        LoanApplication loan2 = new LoanApplication();
+        loan2.setLoanId(2L);
+        loan2.setUser(user);
+        loan2.setStatus(LoanApplication.LoanStatus.PENDING);
+
+        List<LoanApplication> expectedLoans = Arrays.asList(loan1, loan2);
+
+        when(loanAppRepo.findByUserUserId(userId)).thenReturn(expectedLoans);
+
+        // Act
+        List<LoanApplication> result = loanService.getLoansByUserId(userId);
+
+        // Assert
+        assertNotNull(result);
+        assertEquals(2, result.size());
+        assertEquals(userId, result.get(0).getUser().getUserId());
+        assertEquals(userId, result.get(1).getUser().getUserId());
+        verify(loanAppRepo).findByUserUserId(userId);
+
     }
 }

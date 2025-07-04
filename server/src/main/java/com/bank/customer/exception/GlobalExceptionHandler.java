@@ -48,8 +48,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InsufficientBalanceException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public String handleInsufficientBalance(InsufficientBalanceException e) {
-        return e.getMessage();
+    public ApiError handleInsufficientBalance(InsufficientBalanceException e) {
+        return ApiError.of(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)

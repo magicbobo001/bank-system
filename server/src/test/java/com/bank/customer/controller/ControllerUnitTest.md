@@ -71,6 +71,7 @@
 | testRepayLoan_NotFound | 偿还不存在贷款 | ADMIN | loanId=999 | 404 Not Found |
 | testGetRepaymentSchedule | 查询还款计划 | ADMIN | loanId=1 | 200 OK, 返回还款列表 |
 | testGetAllLoanStatus | 查询所有贷款状态 | ADMIN | - | 200 OK, 返回贷款列表 |
+| testGetLoanStatusByUserId | 查询当前用户贷款状态 | USER | userId=1 | 200 OK, 返回贷款列表 |
 | testGetPendingLoans | 查询待处理贷款 | ADMIN | - | 200 OK, 返回待处理列表 |
 | testGetPendingLoans_AccessDenied | 普通用户查询待处理贷款 | USER | - | 403 Forbidden |
 
@@ -113,6 +114,7 @@
 | testGetMyProfile_UserNotFound | 获取不存在用户资料 | USER | - | 404 Not Found |
 | testChangePassword_OldPasswordIncorrect | 修改密码原密码错误 | ADMIN | oldPassword=wrongpass, newPassword=newpass | 400 Bad Request |
 | testChangePassword_NotExist | 修改不存在用户密码 | ADMIN | oldPassword=wrongpass, newPassword=newpass | 404 Not Found |
+| testUpdateLastLogin_Success | 更新最后登录时间 | ADMIN & USER | userId=1 | 200 OK |
 
 ---
 

@@ -7,9 +7,11 @@ import com.bank.customer.repository.UserRoleRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Service
@@ -65,5 +67,13 @@ public class UserService {
 
         user.setPasswordHash(passwordEncoder.encode(newPassword));
         userRepository.save(user);
+    }
+
+    /**
+     * 更新用户最后登录时间为当前时间
+     */
+    @Transactional
+    public void updateLastLogin(Integer userId) {
+        userRepository.updateLastLogin(userId, LocalDateTime.now());
     }
 }

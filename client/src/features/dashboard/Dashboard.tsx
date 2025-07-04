@@ -9,12 +9,12 @@ export default function Dashboard() {
         flexDirection: "column",
         alignItems: "center",
         minHeight: "100vh",
-        maxWidth: "80%",
+        maxWidth: "100%",
         margin: "0 auto",
         padding: "20px",
-        backgroundImage: "url(/images/dashboard-bg.jpeg)",
-        backgroundSize: "70%", // 覆盖整个容器
-        backgroundPosition: "50% 28%", // 居中显示
+        backgroundImage: "url(/images/1.png)",
+        backgroundSize: "100%", // 覆盖整个容器
+        backgroundPosition: "50% 50%", // 居中显示
         backgroundRepeat: "no-repeat", // 不重复
       }}
     >

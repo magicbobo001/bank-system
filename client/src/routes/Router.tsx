@@ -9,6 +9,7 @@ import { RouterProvider } from "react-router-dom";
 import UserManagement from "../features/admin/UserManagement";
 import AdminAccountManagement from "../features/admin/AdminAccountManagement";
 import LoanStatusManagement from "../features/admin/LoanStatusManagement";
+import UserLoanDetails from "../features/loans/UserLoanDetails";
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -18,6 +19,11 @@ export const router = createBrowserRouter([
       { path: "login", element: <Login /> },
       { path: "/transactions/:accountId", element: <TransactionHistory /> },
       { path: "/loans/apply", element: <LoanApplication /> },
+      {
+        path: "/loans/details",
+        element: <PrivateRoute roles={["USER"]} />,
+        children: [{ index: true, element: <UserLoanDetails /> }],
+      },
       {
         path: "dashboard",
         element: <PrivateRoute roles={["USER", "ADMIN"]} />,

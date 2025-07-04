@@ -30,6 +30,12 @@ interface LoanStatusDTO {
   loanId: number;
   userId: number;
   status: string;
+  accountId: string;
+  amount?: number;
+  term?: number;
+  interestRate?: number;
+  startDate?: string;
+  endDate?: string;
 }
 
 interface LoanRepaymentDTO {
@@ -38,6 +44,7 @@ interface LoanRepaymentDTO {
   repaymentDate: string;
   actualRepaymentDate: string | null;
   status: string;
+  lateFee: number | null;
 }
 
 interface LoanApplication {
@@ -132,11 +139,34 @@ const LoanStatusManagement = () => {
   }, [status, loans]);
 
   // 获取还款计划
-  const fetchRepaymentPlans = async (loanId: number) => {
+  const fetchRepaymentPlans = async (
+    loanId: number,
+    openRepaymentDialog = false
+  ) => {
     try {
-      const res = await api.get(`/loans/${loanId}/schedule`);
+      const res = await api.get(
+        `/loans/${loanId}/schedule?t=${new Date().getTime()}`
+      );
       setRepaymentPlans(res.data);
-      setOpenScheduleDialog(true);
+      // 筛选未还款且日期最近的记录
+      if (openRepaymentDialog) {
+        const pendingPlans = res.data
+          .filter((plan: LoanRepaymentDTO) => plan.status !== "PAID")
+          .sort(
+            (a: LoanRepaymentDTO, b: LoanRepaymentDTO) =>
+              new Date(a.repaymentDate).getTime() -
+              new Date(b.repaymentDate).getTime()
+          );
+
+        if (pendingPlans.length > 0) {
+          setRepaymentDate(new Date(pendingPlans[0].repaymentDate));
+          setOpenRepaymentDialog(true);
+        } else {
+          setError("没有待还款计划");
+        }
+      } else {
+        setOpenScheduleDialog(true);
+      }
     } catch (err) {
       const errorMessage =
         (err as ApiError)?.response?.data?.message || "查询还款计划失败";
@@ -155,14 +185,14 @@ const LoanStatusManagement = () => {
       });
       setOpenRepaymentDialog(false);
       setSuccessMessage("还款成功");
-      // 刷新贷款状态和还款计划
-      if (selectedLoanId) {
-        fetchRepaymentPlans(selectedLoanId);
-      }
       // 重新获取所有贷款状态
       const res = await api.get("/loans/status");
       setLoans(res.data);
       setFilteredLoans(res.data);
+      // 刷新还款计划
+      if (selectedLoanId) {
+        fetchRepaymentPlans(selectedLoanId);
+      }
     } catch (err) {
       const errorMessage =
         (err as ApiError)?.response?.data?.message || "还款失败";
@@ -246,7 +276,7 @@ const LoanStatusManagement = () => {
           flexDirection: "column",
           alignItems: "center",
           minHeight: "100vh",
-          maxWidth: "80%",
+          maxWidth: "100%",
           margin: "0 auto",
           padding: "20px",
         }}
@@ -359,46 +389,114 @@ const LoanStatusManagement = () => {
                 <Table>
                   <TableHead>
                     <TableRow>
-                      <TableCell>贷款ID</TableCell>
-                      <TableCell>用户ID</TableCell>
-                      <TableCell>贷款状态</TableCell>
-                      <TableCell>操作</TableCell>
+                      {["APPROVED", "DISBURSED"].includes(status) ? (
+                        <>
+                          <TableCell>贷款ID</TableCell>
+                          <TableCell>账户ID</TableCell>
+                          <TableCell>贷款金额</TableCell>
+                          <TableCell>期限(月)</TableCell>
+                          <TableCell>年利率(%)</TableCell>
+                          <TableCell>开始日期</TableCell>
+                          <TableCell>结束日期</TableCell>
+                          <TableCell>操作</TableCell>
+                        </>
+                      ) : (
+                        <>
+                          <TableCell>贷款ID</TableCell>
+                          <TableCell>用户ID</TableCell>
+                          <TableCell>贷款状态</TableCell>
+                          <TableCell>操作</TableCell>
+                        </>
+                      )}
                     </TableRow>
                   </TableHead>
                   <TableBody>
                     {currentLoans.map((loan) => (
                       <TableRow key={loan.loanId}>
-                        <TableCell>{loan.loanId}</TableCell>
-                        <TableCell>{loan.userId}</TableCell>
-                        <TableCell>{loan.status}</TableCell>
-                        <TableCell>
-                          {loan.status === "APPROVED" && (
-                            <Box sx={{ display: "flex", gap: 1 }}>
-                              <Button
-                                variant="outlined"
-                                size="small"
-                                onClick={() => {
-                                  setSelectedLoanId(loan.loanId);
-                                  fetchRepaymentPlans(loan.loanId);
-                                }}
-                              >
-                                查看还款计划
-                              </Button>
-                              <Button
-                                variant="contained"
-                                size="small"
-                                onClick={() => {
-                                  setSelectedLoanId(loan.loanId);
-                                  setRepaymentDate(null);
-                                  setOpenRepaymentDialog(true);
-                                }}
-                              >
-                                还款操作
-                              </Button>
-                            </Box>
-                          )}
-                          {loan.status !== "APPROVED" && <span>-</span>}
-                        </TableCell>
+                        {["APPROVED", "DISBURSED"].includes(status) ? (
+                          <>
+                            <TableCell>{loan.loanId}</TableCell>
+                            <TableCell>{loan.accountId}</TableCell>
+                            <TableCell>{loan.amount?.toFixed(2)}</TableCell>
+                            <TableCell>{loan.term}</TableCell>
+                            <TableCell>
+                              {loan.interestRate?.toFixed(2)}
+                            </TableCell>
+                            <TableCell>
+                              {loan.startDate
+                                ? new Date(loan.startDate).toLocaleDateString()
+                                : "-"}
+                            </TableCell>
+                            <TableCell>
+                              {loan.endDate
+                                ? new Date(loan.endDate).toLocaleDateString()
+                                : "-"}
+                            </TableCell>
+                            <TableCell>
+                              {loan.status === "APPROVED" && (
+                                <Box sx={{ display: "flex", gap: 1 }}>
+                                  <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => {
+                                      setSelectedLoanId(loan.loanId);
+                                      fetchRepaymentPlans(loan.loanId);
+                                    }}
+                                  >
+                                    查看还款计划
+                                  </Button>
+                                </Box>
+                              )}
+                              {loan.status === "DISBURSED" && (
+                                <Box sx={{ display: "flex", gap: 1 }}>
+                                  <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => {
+                                      setSelectedLoanId(loan.loanId);
+                                      fetchRepaymentPlans(loan.loanId);
+                                    }}
+                                  >
+                                    查看还款计划
+                                  </Button>
+                                  <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={() => {
+                                      setSelectedLoanId(loan.loanId);
+                                      fetchRepaymentPlans(loan.loanId, true);
+                                    }}
+                                  >
+                                    还款操作
+                                  </Button>
+                                </Box>
+                              )}
+                            </TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell>{loan.loanId}</TableCell>
+                            <TableCell>{loan.userId}</TableCell>
+                            <TableCell>{loan.status}</TableCell>
+                            <TableCell>
+                              {loan.status === "APPROVED" && (
+                                <Box sx={{ display: "flex", gap: 1 }}>
+                                  <Button
+                                    variant="outlined"
+                                    size="small"
+                                    onClick={() => {
+                                      setSelectedLoanId(loan.loanId);
+                                      fetchRepaymentPlans(loan.loanId);
+                                    }}
+                                  >
+                                    查看还款计划
+                                  </Button>
+                                </Box>
+                              )}
+                              {loan.status !== "APPROVED" && <span>-</span>}
+                            </TableCell>
+                          </>
+                        )}
                       </TableRow>
                     ))}
                   </TableBody>
@@ -429,20 +527,22 @@ const LoanStatusManagement = () => {
         <Dialog
           open={openRepaymentDialog}
           onClose={() => setOpenRepaymentDialog(false)}
+          maxWidth="md"
         >
           <DialogTitle>贷款还款</DialogTitle>
           <DialogContent>
-            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
               <TextField
                 label="贷款ID"
                 value={selectedLoanId || ""}
                 disabled
                 fullWidth
+                sx={{ marginTop: 2 }}
               />
               <DatePicker
                 label="还款日期"
                 value={repaymentDate}
-                onChange={(newValue) => setRepaymentDate(newValue)}
+                disabled
                 slotProps={{
                   textField: {
                     fullWidth: true,
@@ -475,6 +575,7 @@ const LoanStatusManagement = () => {
                   <TableCell>应还金额</TableCell>
                   <TableCell>应还日期</TableCell>
                   <TableCell>实际还款日期</TableCell>
+                  <TableCell>逾期罚金</TableCell>
                   <TableCell>状态</TableCell>
                 </TableRow>
               </TableHead>
@@ -491,7 +592,8 @@ const LoanStatusManagement = () => {
                         : "无效日期"}
                     </TableCell>
                     <TableCell>
-                      {plan.actualRepaymentDate
+                      {plan.actualRepaymentDate &&
+                      plan.actualRepaymentDate.trim() !== ""
                         ? safeParseDate(plan.actualRepaymentDate)
                           ? format(
                               safeParseDate(plan.actualRepaymentDate)!,
@@ -499,6 +601,11 @@ const LoanStatusManagement = () => {
                             )
                           : "无效日期"
                         : "未还款"}
+                    </TableCell>
+                    <TableCell>
+                      {plan.lateFee && plan.lateFee > 0
+                        ? plan.lateFee.toFixed(2)
+                        : "-"}
                     </TableCell>
                     <TableCell>
                       {plan.status === "PAID" ? "已还款" : "未还款"}

@@ -63,5 +63,11 @@ export const transactionApi = {
     });
   },
 };
-
+// 新增用户相关API
+export const userApi = {
+  // 更新用户最后登录时间
+  updateLastLogin: (userId: number) => {
+    return api.put(`/users/${userId}/last-login`);
+  },
+};
 export default api;

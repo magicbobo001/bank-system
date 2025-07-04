@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -61,6 +62,15 @@ public class UserController {
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
 
         userService.changePassword(user.getUserId(), oldPassword, newPassword);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 更新用户最后登录时间
+     */
+    @PutMapping("/{userId}/last-login")
+    public ResponseEntity<Void> updateLastLogin(@PathVariable Integer userId) {
+        userService.updateLastLogin(userId);
         return ResponseEntity.ok().build();
     }
 }

@@ -39,7 +39,7 @@ public class TransactionService {
                         null,
                         accountId,
                         depositAmount, // 使用 BigDecimal 类型
-                        "deposit",
+                        "DEPOSIT",
                         LocalDateTime.now(),
                         null));
     }
@@ -66,7 +66,7 @@ public class TransactionService {
                         accountId, // from_account_id (取款账户)
                         null, // to_account_id (无转入账户)
                         amount,
-                        "withdraw", // 交易类型
+                        "WITHDRAW", // 交易类型
                         LocalDateTime.now(),
                         null // description
                 ));

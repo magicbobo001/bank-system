@@ -198,4 +198,19 @@ class UserControllerTest {
         mockMvc.perform(get("/api/users").with(csrf()))
                 .andExpect(status().isForbidden());
     }
+
+    // 测试更新用户最后登录时间成功
+    @Test
+    @WithMockUser(roles = "USER")
+    void testUpdateLastLogin_Success() throws Exception {
+        // Arrange
+        Integer userId = 1;
+        doNothing().when(userService).updateLastLogin(userId);
+
+        // Act & Assert
+        mockMvc.perform(put("/api/users/{userId}/last-login", userId)
+                .with(csrf()))
+                .andExpect(status().isOk());
+        verify(userService).updateLastLogin(userId);
+    }
 }

@@ -1,6 +1,7 @@
 package com.bank.customer.controller;
 
 import com.bank.customer.dto.LoanApplicationRequest;
+import com.bank.customer.entity.Account;
 import com.bank.customer.entity.LoanApplication;
 import com.bank.customer.entity.LoanApplication.LoanStatus;
 import com.bank.customer.exception.InvalidDateException;
@@ -246,25 +247,117 @@ class LoanControllerTest {
         @Test
         @WithMockUser(roles = "ADMIN")
         void testGetAllLoanStatus() throws Exception {
+                // 创建测试账户对象
+                Account account = new Account();
+                account.setAccountId("ACC123456");
+
+                // 创建测试用户对象
+                User user = new User();
+                user.setUserId(1);
+
+                // 创建贷款1 - 已审批状态
                 LoanApplication loan1 = new LoanApplication();
                 loan1.setLoanId(1L);
                 loan1.setStatus(LoanStatus.APPROVED);
+                loan1.setUser(user);
+                loan1.setAccount(account);
+                loan1.setAmount(new BigDecimal(10000));
+                loan1.setTerm(12);
+                loan1.setInterestRate(new BigDecimal(5.5));
+                loan1.setStartDate(LocalDate.of(2023, 1, 1));
+                loan1.setEndDate(LocalDate.of(2024, 1, 1));
 
+                // 创建贷款2 - 待审批状态
                 LoanApplication loan2 = new LoanApplication();
                 loan2.setLoanId(2L);
                 loan2.setStatus(LoanStatus.PENDING);
-
-                User user = new User();
-                user.setUserId(1);
-                loan1.setUser(user);
                 loan2.setUser(user);
+                loan2.setAccount(account);
+                loan2.setAmount(new BigDecimal(20000));
+                loan2.setTerm(24);
+                loan2.setInterestRate(new BigDecimal(6.0));
+                loan2.setStartDate(LocalDate.of(2023, 2, 1));
+                loan2.setEndDate(LocalDate.of(2025, 2, 1));
 
+                // Mock服务层返回包含详细信息的贷款列表
                 when(loanService.getAllLoans()).thenReturn(List.of(loan1, loan2));
 
+                // 执行测试并验证完整响应结构
                 mockMvc.perform(get("/api/loans/status").with(csrf()))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.length()").value(2))
-                                .andExpect(jsonPath("$[0].status").value("APPROVED"));
+
+                                // 验证第一个贷款的所有字段
+                                .andExpect(jsonPath("$[0].loanId").value(1))
+                                .andExpect(jsonPath("$[0].userId").value(1))
+                                .andExpect(jsonPath("$[0].status").value("APPROVED"))
+                                .andExpect(jsonPath("$[0].accountId").value("ACC123456"))
+                                .andExpect(jsonPath("$[0].amount").value(10000))
+                                .andExpect(jsonPath("$[0].term").value(12))
+                                .andExpect(jsonPath("$[0].interestRate").value(5.5))
+                                .andExpect(jsonPath("$[0].startDate").value("2023-01-01"))
+                                .andExpect(jsonPath("$[0].endDate").value("2024-01-01"))
+
+                                // 验证第二个贷款的关键字段
+                                .andExpect(jsonPath("$[1].loanId").value(2))
+                                .andExpect(jsonPath("$[1].amount").value(20000))
+                                .andExpect(jsonPath("$[1].term").value(24))
+                                .andExpect(jsonPath("$[1].interestRate").value(6.0));
+        }
+
+        @Test
+        @WithMockUser(roles = "USER")
+        void testGetLoanStatusByUserId() throws Exception {
+                // 创建测试用户和账户
+                User user = new User();
+                user.setUserId(1);
+                Account account = new Account();
+                account.setAccountId("ACC123456");
+                // 创建测试用户和账户2
+                User user2 = new User();
+                user2.setUserId(2);
+                Account account2 = new Account();
+                account2.setAccountId("ACC234567");
+                // 创建用户的贷款
+                LoanApplication loan = new LoanApplication();
+                loan.setLoanId(1L);
+                loan.setStatus(LoanStatus.APPROVED);
+                loan.setUser(user);
+                loan.setAccount(account);
+                loan.setAmount(new BigDecimal(10000));
+                loan.setTerm(12);
+                loan.setInterestRate(new BigDecimal(5.5));
+                loan.setStartDate(LocalDate.of(2023, 1, 1));
+                loan.setEndDate(LocalDate.of(2024, 1, 1));
+                // 创建贷款2
+                LoanApplication loan2 = new LoanApplication();
+                loan2.setLoanId(2L);
+                loan2.setStatus(LoanStatus.APPROVED);
+                loan2.setUser(user2);
+                loan2.setAccount(account2);
+                loan2.setAmount(new BigDecimal(20000));
+                loan2.setTerm(24);
+                loan2.setInterestRate(new BigDecimal(6.0));
+                loan2.setStartDate(LocalDate.of(2023, 2, 1));
+                loan2.setEndDate(LocalDate.of(2025, 2, 1));
+                // Mock服务层方法，根据userId返回贷款
+                when(loanService.getLoansByUserId(1)).thenReturn(List.of(loan));
+
+                // 执行测试，传入userId参数
+                mockMvc.perform(get("/api/loans/status")
+                                .param("userId", "1")
+                                .with(csrf()))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.length()").value(1))
+                                .andExpect(jsonPath("$[0].loanId").value(1))
+                                .andExpect(jsonPath("$[0].userId").value(1))
+                                .andExpect(jsonPath("$[0].status").value("APPROVED"))
+                                .andExpect(jsonPath("$[0].accountId").value("ACC123456"))
+                                .andExpect(jsonPath("$[0].amount").value(10000))
+                                .andExpect(jsonPath("$[0].term").value(12))
+                                .andExpect(jsonPath("$[0].interestRate").value(5.5))
+                                .andExpect(jsonPath("$[0].startDate").value("2023-01-01"))
+                                .andExpect(jsonPath("$[0].endDate").value("2024-01-01"));
         }
 
         @Test
